@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify';
-import { motion } from 'framer-motion';
 import { Edit, Save, Search, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import ClientsTableLoading from './ClientsTableLoading';
 
 function ClientsTable() {
 
   const [clintsData , setClientsData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   const [editingRow, setEditingRow] = useState(null);
@@ -31,6 +32,7 @@ function ClientsTable() {
   useEffect(()=>{
     async function fetchClients() {
       try {
+        setLoading(true);
         const response = await fetch('https://dummyjson.com/users?limit=208&sortBy=firstName&order=asc');
         const data = await response.json();
         const ClietnsData = data.users.map((client) => ({
@@ -44,6 +46,8 @@ function ClientsTable() {
         setClientsData(ClietnsData);
       } catch (error) {
         toast.error('Error on fetch clients' + error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchClients();
@@ -72,12 +76,12 @@ function ClientsTable() {
     };
   };
 
+  if (loading) {
+    return <ClientsTableLoading />;
+  }
+
   return (
-    <motion.div className='bg-primary backdrop-blur-md shadow-lg rounded-xl p-4 sm:p-6 border border-border-primary mx-2 sm:mx-0 mb-8'
-      initial={{opacity: 0, y: 20}}
-      animate={{opacity: 1, y: 0}}
-      transition={{delay: 0.2, duration: 0.5}}
-    >
+    <div className='bg-primary backdrop-blur-md shadow-lg rounded-xl p-4 sm:p-6 border border-border-primary mx-2 sm:mx-0 mb-8'>
       <div className='flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 sm:gap-0'>
         <h2 className='text-lg sm:text-xl font-semibold text-text-secondary text-center sm:text-left'>Clients List</h2>
         <div className='relative w-full sm:w-auto'>
@@ -98,11 +102,8 @@ function ClientsTable() {
           <tbody className='divide-y divide-gray-700'>
             {
               filteredClients.map((client) => (
-                <motion.tr 
+                <tr 
                   key={client.id}
-                  initial={{opacity: 0, y: 10}}
-                  animate={{opacity: 1, y: 0}}
-                  transition={{delay: 0.1, duration: 0.3}}
                   className={`flex flex-col sm:table-row mb-4 sm:mb-0 border-b sm:border-b-0
                     border-gray-700 sm:border-none p-2 sm:p-0 ${editingRow === client.id ? 'bg-secondary ring-1 ring-gray-500' : ''}`}
                 >
@@ -219,13 +220,13 @@ function ClientsTable() {
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
               ))
             }
           </tbody>
         </table>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

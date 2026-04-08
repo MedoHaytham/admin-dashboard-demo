@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion';
 import { Edit, Save, Search, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-
-
+import OrderTableLoading from './OrderTableLoading';
 
 function OrdersTable() {
 
   const [orderData, setOrderData] =useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   const [editingRow, setEditingRow] = useState(null);
@@ -57,6 +56,7 @@ function OrdersTable() {
   useEffect(() => {
     async function fetchOrders() {
       try {
+        setLoading(true);
         const [cartsRes, usersRes] = await Promise.all([
           fetch('https://dummyjson.com/carts?limit=50&sortBy=total'),
           fetch('https://dummyjson.com/users?limit=0&select=id,firstName,lastName,email,address')
@@ -89,18 +89,19 @@ function OrdersTable() {
         setOrderData(orderData);
       } catch (error) {
         toast.error('Error on fetch orders' + error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchOrders();
   },[]);
 
+  if (loading) {
+    return <OrderTableLoading />;
+  }
 
   return (
-    <motion.div className='bg-primary backdrop-blur-md shadow-lg rounded-xl p-4 md:p-6 border border-border-primary mx-2 md:mx-0 mb-8'
-      initial={{opacity: 0, y: 20}}
-      animate={{opacity: 1, y: 0}}
-      transition={{delay: 0.2, duration: 0.5}}
-    >
+    <div className='bg-primary backdrop-blur-md shadow-lg rounded-xl p-4 md:p-6 border border-border-primary mx-2 md:mx-0 mb-8'>
       <div className='flex flex-col md:flex-row justify-between items-center mb-6 gap-4 md:gap-0'>
         <h2 className='text-lg md:text-xl font-semibold text-text-secondary text-center md:text-left'>Orders List</h2>
         <div className='relative w-full md:w-auto'>
@@ -129,11 +130,8 @@ function OrdersTable() {
           <tbody className='divide-y divide-gray-700'>
             {
               filteredOrders.map((order) => (
-                <motion.tr
+                <tr
                   key={order.id}
-                  initial={{opacity: 0, y: 10}}
-                  animate={{opacity: 1, y: 0}}
-                  transition={{delay: 0.1, duration: 0.3}}
                   className={`flex flex-col md:table-row mb-4 md:mb-0 border-b md:border-b-0
                     border-gray-700 md:border-none p-2 md:p-0 ${editingRow === order.id ? 'bg-secondary ring-gray-500': ''}`}
                 >
@@ -275,13 +273,13 @@ function OrdersTable() {
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
               ))
             }
           </tbody>
         </table>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

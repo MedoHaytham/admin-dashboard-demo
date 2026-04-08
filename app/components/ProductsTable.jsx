@@ -1,11 +1,11 @@
 "use client"
 import React, { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion';
 import { Edit, Save, Search, Trash2 } from 'lucide-react';
 import { GoPlus } from "react-icons/go";
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 import AddProductForm from './addProductFrom';
+import ProductsTableLoading from './ProductsTableLoading';
 
 const categories = [
   { id: 1, name: "Beauty", slug: "beauty" },
@@ -36,6 +36,7 @@ const categories = [
 
 function ProductsTable() {
   const [productsData, setProductsData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedTerm, setDebouncedTerm] = useState('');
   const [editingRow, setEditingRow] = useState(null);
@@ -80,11 +81,14 @@ function ProductsTable() {
   useEffect(() => {
     async function fetchProducts() {
       try {
+        setLoading(true);
         const response = await fetch('https://dummyjson.com/products?sortBy=stock&order=asc&limit=194');
         const data = await response.json();
         setProductsData(data.products);
       } catch (error) {
         toast.error('Error fetching products: ' + error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchProducts();
@@ -102,6 +106,10 @@ function ProductsTable() {
     </select>
   );
 
+  if (loading) {
+    return <ProductsTableLoading />;
+  }
+
   return (
     <>
       {/* Add Product Modal */}
@@ -111,11 +119,8 @@ function ProductsTable() {
           onClose={() => setShowAddModal(false)}
         />
       )}
-      <motion.div
+      <div
         className='bg-primary backdrop-blur-md shadow-lg rounded-xl p-4 md:p-6 border border-border-primary mx-2 md:mx-0 mb-8'
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
       >
         {/* Header */}
         <div className='flex flex-col md:flex-row justify-between items-center mb-6 gap-4 md:gap-0'>
@@ -157,11 +162,8 @@ function ProductsTable() {
 
             <tbody className='divide-y divide-gray-700'>
               {filteredProducts.map((product) => (
-                <motion.tr
+                <tr
                   key={product.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.3 }}
                   className={`flex flex-col md:table-row mb-4 md:mb-0 border-b md:border-b-0 border-gray-700 md:border-none p-2 md:p-0 ${editingRow === product.id ? 'bg-secondary ring-gray-500' : ''}`}
                 >
                   {/* ===== Mobile View ===== */}
@@ -275,12 +277,12 @@ function ProductsTable() {
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </motion.div>
+      </div>
     </>
   );
 }
